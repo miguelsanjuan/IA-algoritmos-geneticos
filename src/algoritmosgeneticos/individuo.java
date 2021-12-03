@@ -4,6 +4,7 @@ public class individuo {
     private int[] cromosoma;
     private float costo;
     private int sumainv;
+    private String sumaben;
     
     public individuo(){}
 
@@ -26,6 +27,11 @@ public class individuo {
     public int getSuma(){
             return this.sumainv;
     }
+    
+    public String getBeneficio(){
+            return this.sumaben;
+    }
+
 
     public void ObtenerCosto(){
             this.costo = 0.0f;
@@ -50,7 +56,7 @@ public class individuo {
         
        
         
-        //establecer valores de inversiones 
+        //establecer beneficio de inversiones de la tabla 
         
         double[] aptitud = new double[4];
         
@@ -164,10 +170,11 @@ public class individuo {
             default: aptitud[3] = 0;
                      break;
         }
-            //se calcula la aptitud
+            //se calcula la funcion de aptitud
             this.sumainv = this.cromosoma[0]+this.cromosoma[1] + this.cromosoma[2]+ this.cromosoma[3];
-            int suma = Math.abs((this.cromosoma[0]+this.cromosoma[1] + this.cromosoma[2]+ this.cromosoma[3])-10);
-            this.costo = ((float) (aptitud[0]+aptitud[1]+aptitud[2]+aptitud[3]))/((500*suma)+1);
+            this.sumaben = this.cromosoma[0]+" "+this.cromosoma[1]+" "+this.cromosoma[2]+" "+this.cromosoma[3]+" ";
+            int v = Math.abs((this.cromosoma[0]+this.cromosoma[1] + this.cromosoma[2]+ this.cromosoma[3])-10);
+            this.costo = ((float) (aptitud[0]+aptitud[1]+aptitud[2]+aptitud[3]))/((500*v)+1);
         
         
         

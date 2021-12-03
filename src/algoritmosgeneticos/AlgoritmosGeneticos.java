@@ -31,17 +31,18 @@ public class AlgoritmosGeneticos extends JFrame implements ActionListener{
     public float[] Individuos;
     public int porcentajeMutacion = 80;
     public int TamañoPoblacion = 0;
-    public int porcentajeCruza = 80;
+    public int porcentajeCruza = 0;
     public int tipoCruza = 0;
     public int iteraciones = 0;
     public int tipoSeleccion = 0;
     public int mutacion = 0;
-    public int Terrenos = 4;
+    public int columnasCosto = 4;
     public String[][] PoblacionInicial;
     public String[][] PoblacionFinal;
     public JButton btnAceptar;
     public JButton btnLimpiar;
     public JTextField JTFMejorIndividuo;
+    public JTextField JTFMejorCosto;
     public JTextField JTFPoblacion;
     public JTextField JTFIteraciones;
     public JTextField JTFPCruza;
@@ -105,6 +106,17 @@ public class AlgoritmosGeneticos extends JFrame implements ActionListener{
         JTFMejorIndividuo.setLocation(125, 525);
         JTFMejorIndividuo.setEditable(false);
 
+        JLabel JLMejorCosto = new JLabel("Mejor Costo: ",SwingConstants.RIGHT);
+        JPanelPoblaciones.add(JLMejorCosto);
+        JLMejorCosto.setSize(110, 25);
+        JLMejorCosto.setLocation(200, 525);
+
+        JTFMejorCosto = new JTextField();
+        JPanelPoblaciones.add(JTFMejorCosto);
+        JTFMejorCosto.setSize(90, 25);
+        JTFMejorCosto.setLocation(350, 525);
+        JTFMejorCosto.setEditable(false);
+
         //POBLACION FINAL
         JPanel JPanelConf = new JPanel();
         JPanelConf.setLayout(null);
@@ -131,30 +143,7 @@ public class AlgoritmosGeneticos extends JFrame implements ActionListener{
         JLIteraciones.setSize(90,20);
         JLIteraciones.setLocation(15, 45);
 
-        /*
-        JLabel JLSeleccion = new JLabel("Selección: ",SwingConstants.RIGHT);
-        JCBSeleccion = new JComboBox();
-        JCBSeleccion.addItem("Torneo");
-        //JCBSeleccion.addItem("Ruleta");
-        JPanelConf.add(JCBSeleccion);
-        JCBSeleccion.setSize(80, 20);
-        JCBSeleccion.setLocation(110, 70);
-        JPanelConf.add(JLSeleccion);
-        JLSeleccion.setSize(90,20);
-        JLSeleccion.setLocation(15, 70);
         
-        
-        JLabel JLCruza = new JLabel("Cruza: ",SwingConstants.RIGHT);
-        JCBCruza = new JComboBox();
-        JCBCruza.addItem("Dos Puntos");
-        JPanelConf.add(JCBCruza);
-        JCBCruza.setSize(80, 20);
-        JCBCruza.setLocation(110, 70);
-        JPanelConf.add(JLCruza);
-        JLCruza.setSize(90,20);
-        JLCruza.setLocation(15,70);
-        
-        */
 
 
         JLabel JLPCruza = new JLabel("Cruza %: ",SwingConstants.RIGHT);
@@ -166,17 +155,7 @@ public class AlgoritmosGeneticos extends JFrame implements ActionListener{
         JLPCruza.setSize(70,20);
         JLPCruza.setLocation(190, 45);
 
-        /*
-        JLabel JLMutacion = new JLabel("Mutación: ",SwingConstants.RIGHT);
-        JCBMutacion = new JComboBox();
-        JCBMutacion.addItem("Normal");
-        JPanelConf.add(JCBMutacion);
-        JCBMutacion.setSize(80, 20);
-        JCBMutacion.setLocation(270, 70);
-        JPanelConf.add(JLMutacion);
-        JLMutacion.setSize(70,20);
-        JLMutacion.setLocation(190, 70);
-        */
+    
 
         JLabel JLPMutacion = new JLabel("Mutación %: ",SwingConstants.RIGHT);
         JTFPMutacion = new JTextField();
@@ -260,11 +239,20 @@ public class AlgoritmosGeneticos extends JFrame implements ActionListener{
                         }
 
                         Individuos[i] = mejorIndividuo();
+                        
+                        
                 }
 
                 PoblacionFinal = ObtenerPoblacion(poblacion);
                 float res = mejorIndividuo();
+                System.out.print(res);
+                
+                String psum = mejorCosto();
+                
+                
                 JTFMejorIndividuo.setText(res+"");
+                
+                JTFMejorCosto.setText(psum+"");
                 
                 this.remove(CPanel);
                 this.repaint();
@@ -348,14 +336,15 @@ public class AlgoritmosGeneticos extends JFrame implements ActionListener{
     }
 
     public void CrearPoblacion(ArrayList<individuo> poblacion){	
+        
         for (int i = 0; i < TamañoPoblacion; i++){
             poblacion.add(new individuo(Semilla()));
             poblacion.get(i).ObtenerCosto();
         }	
     }
-
+   //se generan numeros aletorios para costo del 1 al 10
     public int[] Semilla(){
-        int[] arrResultados = new int[Terrenos];
+        int[] arrResultados = new int[columnasCosto];
         int nRandom = -1;
 
         for (int i = 0; i < arrResultados.length; i++){
@@ -370,6 +359,7 @@ public class AlgoritmosGeneticos extends JFrame implements ActionListener{
 
     public float mejorIndividuo(){
         float MejorIndividuo = 0.0f;
+        float mejoractual = 0.0f;
         int conind=0;
         for (individuo ind: this.poblacion){
             
@@ -378,36 +368,76 @@ public class AlgoritmosGeneticos extends JFrame implements ActionListener{
                  
               if (conind < 2){
                 MejorIndividuo = ind.getCosto();
+                mejoractual=MejorIndividuo;
+                //ind.getCromosoma()
                 
                   
-            }else
-              if(conind > 1){
-                  float nuevomejor = ind.getCosto();
-                  if(nuevomejor > MejorIndividuo){
-                      MejorIndividuo = ind.getCosto();
-                  }else{
-                      MejorIndividuo = ind.getCosto();
-                  }
+                }else
+                    if(conind > 1){
+                       //genera nuevo mejor individuo y compara con el mejor individuo anterior
+                       //para elejir el mayor
+                       float nuevomejor = ind.getCosto();
+                        
+                        if(nuevomejor > MejorIndividuo){
+                            MejorIndividuo = ind.getCosto();
+                            mejoractual=MejorIndividuo;
+                        }else{
+                      //MejorIndividuo = ind.getCosto();
+                        }
                   
-              }
+                    }
               
             }
-            
+            if(MejorIndividuo == 0.0f) {
+             // si la suma no es 10
+             //MejorIndividuo = ind.getCosto();
+            //MejorIndividuo = mejoractual;
+            //MejorIndividuo = 1.81f;
+            }    
         }
 
         return MejorIndividuo;
     }
-
-    public float PromedioGen(){
-        float Costo = 0, Promedio = 0;
-
+    
+    public String mejorCosto(){
+        String mejorCosto = "";
+        float MejorIndividuo = 0.0f;
+        int conind=0;
         for (individuo ind: this.poblacion){
-            Costo += ind.getCosto();
+            //mejorCosto = ind.getSuma();
+            if(ind.getSuma() == 10) {
+            
+            
+            conind++;
+                
+                 
+              if (conind < 2){
+                MejorIndividuo = ind.getCosto();
+                mejorCosto = ind.getBeneficio();
+                //ind.getCromosoma()
+                
+                  
+                }else
+                    if(conind > 1){
+                       float nuevomejor = ind.getCosto();
+                        
+                        if(nuevomejor > MejorIndividuo){
+                            MejorIndividuo = ind.getCosto();
+                            mejorCosto = ind.getBeneficio();
+                        }else{
+                      //MejorIndividuo = ind.getCosto();
+                        }
+                  
+                    }
+            
+            }
+            
         }
-
-        Promedio = Costo/TamañoPoblacion;
-        return Promedio;
+        return mejorCosto;
+        
     }
+
+    
 
     public individuo realizarCruza(int tipoCruza, individuo individuo1, individuo individuo2, int PuntoDeCruza, int PuntoDeCruza2, int varHijo){
         int[] CromosomaAuxiliar = new int[individuo1.getCromosoma().length];
@@ -462,7 +492,7 @@ public class AlgoritmosGeneticos extends JFrame implements ActionListener{
         individuo individuoAux;
         int Auxiliar, nPosicion;
 
-        nPosicion = random.nextInt(Terrenos);
+        nPosicion = random.nextInt(columnasCosto);
         Auxiliar = CromosomaAuxiliar[nPosicion];
         Auxiliar = (Auxiliar == 1) ? 0 : 1;
         CromosomaAuxiliar[nPosicion] = Auxiliar;
