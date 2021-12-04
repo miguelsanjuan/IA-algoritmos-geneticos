@@ -29,7 +29,7 @@ public class AlgoritmosGeneticos extends JFrame implements ActionListener{
     public Random random = new Random();
     public ArrayList<individuo> poblacion = new ArrayList<individuo>();
     public float[] Individuos;
-    public int porcentajeMutacion = 80;
+    public int porcentajeMutacion = 0;
     public int TamañoPoblacion = 0;
     public int porcentajeCruza = 0;
     public int tipoCruza = 0;
@@ -329,6 +329,7 @@ public class AlgoritmosGeneticos extends JFrame implements ActionListener{
         for (int i = 0; i < TamañoPoblacion; i++){
             individuo1 = random.nextInt(TamañoPoblacion);
             do{ individuo2 = random.nextInt(TamañoPoblacion); }while(individuo1 == individuo2);
+            //selecciona al mejor individuo en base a valor de la tabla 
             PoblacionAux.add((poblacion.get(individuo1).getCosto() < poblacion.get(individuo2).getCosto()) ? poblacion.get(individuo1) : poblacion.get(individuo2));
         }
 
@@ -436,7 +437,36 @@ public class AlgoritmosGeneticos extends JFrame implements ActionListener{
         return mejorCosto;
         
     }
+// se realiza cruza de dos puntos
+    public void RCruza(ArrayList<individuo> poblacion, int tipoCruza){
+        ArrayList<individuo> PoblacionAuxiliar = new ArrayList<individuo>(poblacion);
+        int numeroCruzas = (TamañoPoblacion * porcentajeCruza/100), varPosicionR = 0, puntoCruza, puntoCruza1, puntoCruza2, varAuxiliar;
+        int arrPosicionCruza[] = new int[numeroCruzas/2];
+        individuo individuo1, individuo2;
 
+        //se generan posiciones a donde se realizara la cruza
+        for (int i = 0; i < numeroCruzas/2; i++){
+            arrPosicionCruza[i] = -1;
+            do{
+                varPosicionR = random.nextInt(TamañoPoblacion - 2);
+                if(varPosicionR % 2 != 0) varPosicionR++;
+            }while(ExistePosicion(arrPosicionCruza, varPosicionR));
+            arrPosicionCruza[i] = varPosicionR;
+        }
+
+        for (int i = 0; i < arrPosicionCruza.length; i++){			
+            individuo1 = new individuo(PoblacionAuxiliar.get(arrPosicionCruza[i]).getCromosoma());
+            individuo2 =  new individuo(PoblacionAuxiliar.get(arrPosicionCruza[i]+1).getCromosoma());
+
+            if(tipoCruza == 0){
+                puntoCruza = random.nextInt(4)+1;
+                PoblacionAuxiliar.set(arrPosicionCruza[i], realizarCruza(0,individuo1,individuo2, puntoCruza, 0, 1));
+                PoblacionAuxiliar.set((arrPosicionCruza[i]+1), realizarCruza(0,individuo1,individuo2, puntoCruza, 0, 2));
+            }
+        }
+
+        this.poblacion = new ArrayList<>(PoblacionAuxiliar);
+    }
     
 
     public individuo realizarCruza(int tipoCruza, individuo individuo1, individuo individuo2, int PuntoDeCruza, int PuntoDeCruza2, int varHijo){
@@ -451,22 +481,14 @@ public class AlgoritmosGeneticos extends JFrame implements ActionListener{
                 System.arraycopy(individuo2.getCromosoma(), 0, CromosomaAuxiliar, 0, individuo2.getCromosoma().length);
                 System.arraycopy(individuo1.getCromosoma(), PuntoDeCruza, CromosomaAuxiliar, PuntoDeCruza, (individuo1.getCromosoma().length-PuntoDeCruza));
             }
-        }else{
-            if(varHijo == 1){
-                System.arraycopy(individuo1.getCromosoma(), 0, CromosomaAuxiliar, 0, individuo1.getCromosoma().length);
-                System.arraycopy(individuo2.getCromosoma(), PuntoDeCruza, CromosomaAuxiliar, PuntoDeCruza, ((PuntoDeCruza2-PuntoDeCruza)+1));
-                System.arraycopy(individuo1.getCromosoma(), PuntoDeCruza2, CromosomaAuxiliar, PuntoDeCruza, (individuo1.getCromosoma().length-PuntoDeCruza2));
-            }else{
-                System.arraycopy(individuo2.getCromosoma(), 0, CromosomaAuxiliar, 0, individuo2.getCromosoma().length);
-                System.arraycopy(individuo1.getCromosoma(), PuntoDeCruza, CromosomaAuxiliar, PuntoDeCruza, ((PuntoDeCruza2-PuntoDeCruza)+1));
-                System.arraycopy(individuo2.getCromosoma(), PuntoDeCruza2, CromosomaAuxiliar, PuntoDeCruza, (individuo1.getCromosoma().length-PuntoDeCruza2));
-            }
+        
         }
 
         individuoAuxiliar = new individuo(CromosomaAuxiliar);
         individuoAuxiliar.ObtenerCosto();
         return individuoAuxiliar;
     }
+    
 
     public void mutacion(ArrayList<individuo> poblacion){
         int nMutaciones = (TamañoPoblacion * porcentajeMutacion/100), PosicionR = 0;
@@ -480,13 +502,13 @@ public class AlgoritmosGeneticos extends JFrame implements ActionListener{
         }
 
         for (int i = 0; i < PosicionM.length; i++){	
-            PoblacionAuxiliar.set(PosicionM[i], mutacionNormal(poblacion.get(PosicionM[i])));
+            PoblacionAuxiliar.set(PosicionM[i], hacerMutacion(poblacion.get(PosicionM[i])));
         }
         
         this.poblacion = new ArrayList<>(PoblacionAuxiliar);
     }
     
-    public individuo mutacionNormal(individuo individuo1){
+    public individuo hacerMutacion(individuo individuo1){
         int[] CromosomaAuxiliar = new int[individuo1.getCromosoma().length];
         System.arraycopy(individuo1.getCromosoma(), 0, CromosomaAuxiliar, 0, individuo1.getCromosoma().length);
         individuo individuoAux;
@@ -502,36 +524,6 @@ public class AlgoritmosGeneticos extends JFrame implements ActionListener{
         return individuoAux;
     }
     
-    public void RCruza(ArrayList<individuo> poblacion, int tipoCruza){
-        ArrayList<individuo> PoblacionAuxiliar = new ArrayList<individuo>(poblacion);
-        int numeroCruzas = (TamañoPoblacion * porcentajeCruza/100), varPosicionR = 0, puntoCruza, puntoCruza1, puntoCruza2, varAuxiliar;
-        int arrPosicionCruza[] = new int[numeroCruzas/2];
-        individuo individuo1, individuo2;
-
-        for (int i = 0; i < numeroCruzas/2; i++){
-            arrPosicionCruza[i] = -1;
-            do{
-                varPosicionR = random.nextInt(TamañoPoblacion - 2);
-                if(varPosicionR % 2 != 0) varPosicionR++;
-            }while(ExistePosicion(arrPosicionCruza, varPosicionR));
-            arrPosicionCruza[i] = varPosicionR;
-        }
-
-        for (int i = 0; i < arrPosicionCruza.length; i++){			
-            individuo1 = new individuo(PoblacionAuxiliar.get(arrPosicionCruza[i]).getCromosoma());
-            individuo2 =  new individuo(PoblacionAuxiliar.get(arrPosicionCruza[i]+1).getCromosoma());
-
-            if(tipoCruza == 0){
-                //puntoCruza = random.nextInt(4);
-                puntoCruza = random.nextInt(4)+1;
-                PoblacionAuxiliar.set(arrPosicionCruza[i], realizarCruza(0,individuo1,individuo2, puntoCruza, 0, 1));
-                PoblacionAuxiliar.set((arrPosicionCruza[i]+1), realizarCruza(0,individuo1,individuo2, puntoCruza, 0, 2));
-            }
-        }
-
-        this.poblacion = new ArrayList<>(PoblacionAuxiliar);
-    }
-
     public boolean ExistePosicion(int[] PosicionCruza, int Posicion){
         for (int i = 0; i< PosicionCruza.length; i++){
             if(PosicionCruza[i] == Posicion){
